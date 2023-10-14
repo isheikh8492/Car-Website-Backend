@@ -2,6 +2,7 @@ package com.udacity.vehicles.client.prices;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -20,8 +21,8 @@ public class PriceClient {
     }
 
     // In a real-world application we'll want to add some resilience
-    // to this method with retries/CB/failover capabilities
-    // We may also want to cache the results so we don't need to
+    // to this method with retries/CB/fail over capabilities
+    // We may also want to cache the results, so we don't need to
     // do a request every time
     /**
      * Gets a vehicle price from the pricing client, given vehicle ID.
@@ -35,9 +36,8 @@ public class PriceClient {
             Price price = client
                     .get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("services/price/")
-                            .queryParam("vehicleId", vehicleId)
-                            .build()
+                            .path("prices/{id}")
+                            .build(vehicleId)
                     )
                     .retrieve().bodyToMono(Price.class).block();
 
@@ -47,5 +47,27 @@ public class PriceClient {
             log.error("Unexpected error retrieving price for vehicle {}", vehicleId, e);
         }
         return "(consult price)";
+    }
+
+    /**
+     * Delete a vehicle price from the pricing client, given vehicle ID.
+     * @param vehicleId ID number of the vehicle for which to delete the price
+     * @return error message that the vehicle ID is invalid, or note that the
+     *   service is down.
+     */
+
+    public void deletePrice(Long vehicleId) {
+        try {
+            client.delete()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("prices/{id}")
+                            .build(vehicleId)
+                    )
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(Void.class).block();
+        } catch (Exception e) {
+            log.error("Unexpected error deleting price for vehicle {}", vehicleId, e);
+        }
     }
 }
