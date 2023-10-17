@@ -45,11 +45,7 @@ public class CarService {
      */
     public Car findById(Long id) {
         Car car = repository.findById(id).orElseThrow(CarNotFoundException::new);
-
-
         car.setPrice(priceClient.getPrice(id));
-
-
         car.setLocation(mapsClient.getAddress(car.getLocation()));
         return car;
     }
@@ -62,12 +58,14 @@ public class CarService {
      */
     public Car save(Car car) {
         if (car.getId() != null) {
-            return repository.findById(car.getId())
+             Car updatedCar = repository.findById(car.getId())
                     .map(carToBeUpdated -> {
                         carToBeUpdated.setDetails(car.getDetails());
+                        carToBeUpdated.setCondition(car.getCondition());
                         carToBeUpdated.setLocation(car.getLocation());
                         return repository.save(carToBeUpdated);
                     }).orElseThrow(CarNotFoundException::new);
+             repository.save(updatedCar);
         }
 
         return repository.save(car);
